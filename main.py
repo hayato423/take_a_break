@@ -33,8 +33,10 @@ def start_serial():
 
 ser = start_serial()
 while ser.is_open:
-    data = ser.read_all()
-    if data != b'':
+    bin_data = ser.read(256)
+    if bin_data != b'':
+        data = bin_data.decode()
+        data = data.strip()
         print(data)
 ser.close()
 
