@@ -3,6 +3,19 @@ from serial.tools import list_ports
 import numpy as np
 from datetime import datetime
 from time import sleep
+import pyautogui
+
+
+bpm = 0
+ibi = 0
+bpm_prev = 0
+ibi_prev = 0
+pNN_data = np.zeros(30)
+pNN_count = 0
+checker = 1
+datalist = 0
+first_pNN = 0
+pNN_ave = 0
 
 def start_serial():
     ser = serial.Serial()
@@ -13,22 +26,25 @@ def start_serial():
         print("port not found")
         return None
     else:
+        #ポート一覧表示
         for i,device in enumerate(devices):
             print("{}:{} ".format(i,device),end="")
         print("")
-        print("input device number")
-        device_num = int(input())
+        device_num = int(input("Input device number:"))
         baudrates = [1200,2400,4800,9600,19200,38400,57600,115200]
+        #ボードレート一覧表示
         for i,baudrate in enumerate(baudrates):
             print("{}:{} ".format(i,baudrate),end="")
         print("")
-        print("input baundrate")
-        baudrate_num = int(input())
+        baudrate_num = int(input("Input baundrate:"))
+        #入力された設定を反映
         ser.port = devices[device_num]
         ser.baudrate = baudrates[baudrate_num]
+        percentage = float(input('Input percentage:'))
     try:
+        #接続テスト
         ser.open()
-        return ser
+        return ser, percentage
     except:
         print("error when opening serial")
         return None
@@ -43,24 +59,12 @@ def get_data(ser):
     else:
         return None
 
-def pNN():
-    print('pnn')
 
 
-
-ser = start_serial()
-bpm = 0
-ibi = 0
-bpm_prev = 0
-ibi_prev = 0
-pNN_data = np.zeros(30)
-pNN_count = 0
-checker = 1
-datalist = 0
-first_pNN = 0
-
+ser, percentage = start_serial()
 print("start")
-print('please wait')
+print('Please wait')
+print(percentage)
 while ser.is_open:
     data = get_data(ser)
     if data != None:
@@ -91,10 +95,15 @@ while ser.is_open:
                         first_pNN = pNN_ave
                         print("\nfirst pNN is {}".format(first_pNN))
                     print("BPM:{}  pNN:{}".format(bpm,pNN_ave))
+                    if pNN_ave < first_pNN * (percentage/100):
+                        pyautogui.keyDown('win')
+                        pyautogui.press('x')
+                        pyautogui.keyUp('win')
+                        pyautogui.press(['u','s'])
+                        exit()
             ibi_prev = ibi
             bpm_prev = bpm
         checker = 0
-
 ser.close()
 
 
